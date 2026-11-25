@@ -1,0 +1,1449 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>把一次改动交给 Agent · Harness 工程讲稿</title>
+<style>
+:root {
+  --ink:#1f302a;
+  --green:#114b3b;
+  --deep:#113d32;
+  --paper:#f9f8f3;
+  --white:#fffefa;
+  --line:#c9d3c7;
+  --soft:#eaf0e6;
+  --muted:#52645a;
+  --orange:#a54020;
+  --rust:#ff9b65;
+  --serif:"STIX Two Text","Songti SC","STSong","Noto Serif CJK SC","Source Han Serif SC",Georgia,serif;
+  --sans:"Inter","PingFang SC","Noto Sans CJK SC","Microsoft YaHei",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Consolas,monospace;
+  --bar:65px
+}
+* {
+  box-sizing:border-box
+}
+html {
+  scroll-padding-top:calc(var(--bar) + 18px)
+}
+body {
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font:16px/1.78 var(--sans);
+  overflow-wrap:anywhere
+}
+a {
+  color:var(--green);
+  text-underline-offset:.21em;
+  text-decoration-thickness:1px
+}
+a:hover {
+  text-decoration-thickness:2px
+}
+button,summary {
+  font:inherit;
+  cursor:pointer
+}
+button {
+  color:inherit
+}
+button:focus-visible,a:focus-visible,summary:focus-visible {
+  outline:3px solid #bd4d1f;
+  outline-offset:3px
+}
+button:disabled {
+  cursor:default;
+  opacity:.4
+}
+button[hidden],[hidden] {
+  display:none!important
+}
+.js-only {
+  display:none!important
+}
+.js .js-only:not([hidden]) {
+  display:inline-flex!important
+}
+.skip {
+  position:absolute;
+  z-index:20;
+  top:-70px;
+  left:12px;
+  padding:8px;
+  background:white
+}
+.skip:focus {
+  top:8px
+}
+.mast {
+  min-height:var(--bar);
+  position:sticky;
+  top:0;
+  z-index:10;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  background:var(--paper);
+  border-bottom:1px solid var(--line);
+  padding:8px max(4vw,18px)
+}
+.brand {
+  display:flex;
+  align-items:center;
+  gap:11px;
+  font:700 14px var(--sans);
+  color:var(--deep);
+  text-decoration:none;
+  letter-spacing:.045em;
+  flex-shrink:0
+}
+.brand svg {
+  width:32px;
+  height:32px
+}
+.commands {
+  display:flex;
+  align-items:center;
+  gap:5px;
+  flex-wrap:wrap
+}
+.tool,.cta,.secondary,.step {
+  display:inline-flex;
+  min-height:44px;
+  align-items:center;
+  justify-content:center;
+  gap:.48em;
+  padding:.42em .78em;
+  text-decoration:none;
+  border:1px solid transparent;
+  border-radius:5px;
+  background:transparent;
+  font:600 14px/1.4 var(--sans);
+  white-space:nowrap
+}
+.tool:hover,.secondary:hover,.step:hover {
+  background:var(--soft)
+}
+.tool.strong,.cta {
+  background:var(--green);
+  color:white
+}
+.tool.strong:hover,.cta:hover {
+  background:#0d392d
+}
+.tool svg {
+  width:16px;
+  height:16px;
+  stroke:currentColor;
+  fill:none;
+  stroke-width:1.7;
+  stroke-linejoin:round;
+  stroke-linecap:round
+}
+.cover {
+  background:var(--deep);
+  color:var(--paper);
+  position:relative;
+  isolation:isolate;
+  overflow:hidden
+}
+.cover:after {
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  background-image:radial-gradient(rgba(211,237,213,.15) .65px,transparent .85px);
+  background-size:15px 15px;
+  mask-image:linear-gradient(to right,transparent,#000)
+}
+.cover-inner {
+  max-width:1500px;
+  display:grid;
+  grid-template-columns:1.08fr .92fr;
+  align-items:center;
+  gap:3vw;
+  margin:auto;
+  padding:clamp(44px,5vw,86px) max(5vw,22px)
+}
+.eyebrow,.kicker,.toc-title,.smallcap {
+  font:700 12px/1.6 var(--sans);
+  letter-spacing:.12em
+}
+.eyebrow {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:#daf0d3;
+  margin:0 0 20px
+}
+.eyebrow:before {
+  content:"";
+  height:2px;
+  width:36px;
+  background:var(--rust)
+}
+h1,h2,h3,p {
+  margin-top:0
+}
+.cover h1 {
+  font:650 clamp(42px,4.8vw,78px)/1.14 var(--serif);
+  letter-spacing:-.045em;
+  margin:0 0 20px;
+  text-wrap:balance
+}
+.cover h1 em {
+  color:#d3e7b9;
+  font-weight:inherit;
+  font-style:normal
+}
+.cover .deck {
+  max-width:38em;
+  font-size:clamp(15px,1.2vw,19px);
+  line-height:1.8;
+  color:#dce7dc;
+  margin:0 0 23px
+}
+.intro-actions {
+  display:flex;
+  align-items:center;
+  gap:14px;
+  flex-wrap:wrap
+}
+.intro-actions .cta {
+  color:#173c2b;
+  background:#e1ebc9;
+  padding:.6em 1.15em
+}
+.intro-actions .cta:hover {
+  background:white
+}
+.on-dark {
+  color:#f4f5e9;
+  border-bottom:1px solid #96afa1;
+  text-decoration:none;
+  font-size:14px;
+  padding:8px 0
+}
+.cover-art {
+  margin:0;
+  min-width:0
+}
+.cover-art svg {
+  display:block;
+  width:100%;
+  max-width:520px;
+  margin-inline:auto
+}
+.cover-art figcaption {
+  color:#d4e3d4;
+  font-size:12px;
+  letter-spacing:.06em;
+  text-align:center;
+  margin-top:6px
+}
+.cover-meta {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+  max-width:1500px;
+  margin:auto;
+  padding:12px max(5vw,22px);
+  border-top:1px solid #416454;
+  color:#d3e4d6;
+  font:500 12px/1.7 var(--sans)
+}
+.cover-meta code {
+  background:transparent;
+  color:inherit;
+  padding:0
+}
+.layout {
+  max-width:1490px;
+  margin:auto;
+  padding:36px max(4vw,18px) 70px;
+  display:grid;
+  grid-template-columns:minmax(190px,230px) minmax(0,1fr);
+  gap:clamp(24px,4vw,66px);
+  align-items:start
+}
+.rail {
+  position:sticky;
+  top:calc(var(--bar) + 14px);
+  max-height:calc(100vh - var(--bar) - 30px);
+  overflow:auto;
+  scrollbar-width:thin;
+  padding:0 14px 16px 1px
+}
+.toc-title {
+  color:var(--green);
+  border-top:3px solid var(--green);
+  margin:0 0 12px;
+  padding:13px 0 0
+}
+.toc-group {
+  color:#56675a;
+  margin:16px 0 3px;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.08em
+}
+.nav-list {
+  margin:0;
+  padding:0;
+  list-style:none
+}
+.nav-list a {
+  display:flex;
+  gap:9px;
+  align-items:baseline;
+  color:var(--ink);
+  border-radius:4px;
+  text-decoration:none;
+  padding:5px 8px;
+  font-size:13px;
+  line-height:1.55
+}
+.nav-list a:hover,.nav-list a[aria-current] {
+  background:#e1e9dd;
+  color:#113e2a
+}
+.nav-list a[aria-current] {
+  font-weight:bold
+}
+.num {
+  font:500 11px var(--mono);
+  color:var(--muted);
+  flex:0 0 20px
+}
+main {
+  min-width:0
+}
+.chapter {
+  scroll-margin-top:12px;
+  padding:clamp(28px,3.1vw,45px) 0;
+  border-top:1px solid var(--line);
+  max-width:1150px
+}
+.chapter:first-child {
+  border-top:3px solid var(--green);
+  padding-top:22px
+}
+.chapter header {
+  margin:0 0 20px
+}
+.kicker {
+  margin:0 0 9px;
+  color:var(--orange)
+}
+h2 {
+  font:650 clamp(26px,2.45vw,43px)/1.32 var(--serif);
+  letter-spacing:-.035em;
+  color:var(--deep);
+  margin:0 0 10px;
+  text-wrap:balance
+}
+.lead {
+  font-size:clamp(16px,1.36vw,21px);
+  line-height:1.65;
+  color:var(--muted);
+  max-width:55em;
+  margin-bottom:0
+}
+.visual {
+  margin:17px 0
+}
+.visual>:first-child,.grid>* >:first-child,figure>:first-child,.notes>:first-child {
+  margin-top:0
+}
+.visual>:last-child,.grid>* >:last-child,.notes>:last-child {
+  margin-bottom:0
+}
+h3 {
+  font-size:1.1em;
+  line-height:1.5;
+  color:var(--green);
+  margin:1.25em 0 .55em
+}
+h4 {
+  line-height:1.5;
+  margin:1em 0 .4em
+}
+p {
+  margin-bottom:.75em
+}
+li+li {
+  margin-top:.22em
+}
+.nav-list li+li {
+  margin:0
+}
+li::marker {
+  color:var(--orange)
+}
+ol,ul {
+  padding-inline-start:1.45em
+}
+code,kbd {
+  font-family:var(--mono);
+  font-size:.91em;
+  overflow-wrap:anywhere
+}
+code {
+  background:#e7ebe2;
+  border-radius:3px;
+  padding:.05em .3em
+}
+pre {
+  overflow:auto;
+  line-height:1.65;
+  background:#17372c;
+  color:#eff4e9;
+  padding:14px 18px;
+  border-radius:6px;
+  tab-size:2;
+  max-width:100%;
+  font:13px/1.65 var(--mono)
+}
+pre code {
+  font:inherit;
+  background:none;
+  white-space:pre;
+  color:inherit;
+  padding:0
+}
+figure {
+  margin:1em 0;
+  padding:16px 18px;
+  background:#eef2e8;
+  border:1px solid var(--line);
+  border-radius:8px;
+  max-width:100%
+}
+.visual svg {
+  display:block;
+  max-width:100%;
+  height:auto;
+  margin:auto
+}
+figcaption {
+  color:var(--muted);
+  font-size:.83em;
+  line-height:1.6;
+  margin-top:.6em
+}
+.flow {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px
+}
+.flow>span,.flow>div {
+  padding:7px 12px;
+  background:var(--white);
+  border:1px solid #aebfac;
+  border-radius:5px;
+  font-weight:650
+}
+.flow>span:not(:last-child)::after {
+  content:" →";
+  color:var(--orange);
+  font-size:.86em
+}
+.grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,185px),1fr));
+  gap:12px
+}
+.grid>div,.grid>section,.grid>article {
+  padding:15px 16px;
+  border:1px solid var(--line);
+  border-top:3px solid #7a9678;
+  background:var(--white);
+  border-radius:3px 3px 6px 6px
+}
+.grid h3,.grid h4 {
+  margin:0 0 5px
+}
+.grid p,.grid ul {
+  font-size:.94em
+}
+.grid strong,.callout strong {
+  color:var(--green)
+}
+.callout,blockquote {
+  margin:16px 0;
+  padding:13px 18px;
+  background:#f7eadd;
+  border-left:3px solid #b05a34;
+  color:#4b3729
+}
+.callout p:last-child,blockquote p:last-child {
+  margin-bottom:0
+}
+.visual b,.visual strong {
+  font-weight:685
+}
+table {
+  width:100%;
+  border-collapse:collapse;
+  line-height:1.58;
+  margin:12px 0;
+  font-size:.92em;
+  table-layout:auto
+}
+th,td {
+  padding:9px 11px;
+  text-align:left;
+  vertical-align:top;
+  border-bottom:1px solid var(--line)
+}
+th {
+  color:var(--deep);
+  background:#e7eddf;
+  font-weight:700
+}
+tbody tr:nth-child(even) {
+  background:#f2f3ed
+}
+caption {
+  font-weight:bold;
+  text-align:left;
+  color:var(--green);
+  margin-bottom:5px
+}
+.table-scroll {
+  overflow:auto
+}
+details {
+  border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+  padding:6px 0;
+  margin:15px 0
+}
+summary {
+  color:var(--green);
+  padding:7px 4px;
+  font-weight:670
+}
+.notes {
+  margin:20px 0 14px;
+  padding:14px 18px 14px 21px;
+  border-left:3px solid #b1c2a2;
+  background:linear-gradient(90deg,#eef0e5,rgba(238,240,229,.25));
+  font:400 16px/1.9 var(--serif)
+}
+.notes h3 {
+  font:700 12px/1.6 var(--sans);
+  letter-spacing:.08em;
+  color:#476044;
+  margin:0 0 6px
+}
+.notes p+p {
+  margin-top:.5em
+}
+.refs {
+  display:flex;
+  gap:3px 10px;
+  align-items:baseline;
+  flex-wrap:wrap;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.65;
+  margin:10px 0 0
+}
+.refs a {
+  color:#3c5948
+}
+.notes-off .notes {
+  display:none
+}
+.tag-code {
+  color:#154733;
+  font:600 .9em var(--mono)
+}
+.experiment {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px
+}
+.experiment>div {
+  border:1px solid #aec5b4;
+  border-radius:6px;
+  background:#e7eee4;
+  padding:13px 16px
+}
+.experiment>div+div {
+  border-color:#ddbfaa;
+  background:#f5e9de
+}
+.experiment strong {
+  display:block;
+  font:650 1.35em/1.4 var(--mono);
+  margin-bottom:4px
+}
+.experiment p {
+  margin:0;
+  font-size:14px
+}
+.foot {
+  border-top:1px solid var(--line);
+  padding:20px max(4vw,18px);
+  color:var(--muted);
+  font-size:13px;
+  text-align:center
+}
+.rail-close {
+  display:none
+}
+.progress-wrap {
+  display:none
+}
+body.projecting .cover,body.projecting .foot,body.projecting .rail,body.projecting .chapter:not(.active) {
+  display:none
+}
+body.projecting .layout {
+  display:block;
+  max-width:1340px;
+  padding:24px max(5vw,20px) 96px
+}
+body.projecting .chapter {
+  max-width:none;
+  border:0;
+  padding:0
+}
+body.projecting .chapter h2 {
+  font-size:clamp(32px,3.5vw,63px)
+}
+body.projecting .chapter .visual {
+  font-size:clamp(17px,1.45vw,23px)
+}
+body.projecting .refs {
+  margin-top:20px
+}
+body.projecting .progress-wrap {
+  display:flex;
+  z-index:9;
+  align-items:center;
+  justify-content:center;
+  gap:15px;
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  background:var(--paper);
+  border-top:1px solid var(--line);
+  padding:7px 12px;
+  box-shadow:0 -2px 9px #17372c0d
+}
+.step {
+  border-color:var(--line)
+}
+#position {
+  font:500 14px var(--mono);
+  color:var(--green)
+}
+.progress-line {
+  height:3px;
+  position:absolute;
+  top:-2px;
+  left:0;
+  background:var(--orange)
+}
+.key-hint {
+  font-size:12px;
+  color:var(--muted)
+}
+body.toc-open .rail {
+  display:block;
+  position:fixed;
+  z-index:14;
+  top:calc(var(--bar) + 5px);
+  right:4vw;
+  width:min(350px,92vw);
+  max-height:calc(100dvh - var(--bar) - 15px);
+  padding:15px 20px 20px;
+  box-shadow:0 10px 40px #18291b33;
+  border:1px solid #a4b6a4;
+  border-radius:6px;
+  background:var(--paper)
+}
+body.toc-open .rail-close {
+  display:inline-flex;
+  float:right;
+  min-height:32px
+}
+.rail-close {
+  font-size:13px
+}
+@media(max-width:920px) {
+  .layout {
+    grid-template-columns:168px minmax(0,1fr);
+    gap:23px
+  }
+  .cover-inner {
+    grid-template-columns:1.1fr .9fr;
+    gap:16px
+  }
+  .brand {
+    font-size:13px
+  }
+  .mast {
+    padding-inline:14px
+  }
+  .cover-art figcaption {
+    font-size:11px
+  }
+}
+@media(max-width:720px) {
+  :root {
+    --bar:60px
+  }
+  .cover-inner {
+    grid-template-columns:1fr;
+    gap:18px;
+    padding-block:34px 24px
+  }
+  .cover h1 {
+    font-size:clamp(38px,8vw,58px)
+  }
+  .cover .deck {
+    font-size:16px
+  }
+  .cover-art svg {
+    max-width:365px
+  }
+  .cover-meta {
+    flex-wrap:wrap;
+    gap:4px 12px
+  }
+  .layout {
+    display:block;
+    padding-top:22px
+  }
+  .rail {
+    position:static;
+    max-height:none;
+    padding:0;
+    margin-bottom:22px
+  }
+  .js .rail {
+    display:none
+  }
+  .mast {
+    gap:3px
+  }
+  .commands {
+    gap:0
+  }
+  .tool {
+    font-size:12px;
+    padding:.4em .55em
+  }
+  .tool svg {
+    width:15px;
+    height:15px
+  }
+  .brand .wordmark {
+    display:none
+  }
+  .brand {
+    gap:0
+  }
+  .brand svg {
+    width:29px
+  }
+  .cover-art figcaption {
+    margin-top:0
+  }
+  .kicker {
+    font-size:11px
+  }
+  .grid {
+    gap:8px
+  }
+  .grid>div,.grid>section,.grid>article {
+    padding:12px
+  }
+  .chapter {
+    padding-block:27px
+  }
+  .notes {
+    padding:12px 14px
+  }
+  .experiment {
+    gap:6px
+  }
+  .experiment>div {
+    padding:10px
+  }
+  .experiment p {
+    font-size:13px
+  }
+  .key-hint {
+    display:none
+  }
+  figure {
+    padding:10px
+  }
+  .tool,.cta,.step {
+    min-height:44px
+  }
+  th,td {
+    padding:7px 6px
+  }
+  table {
+    font-size:.83em
+  }
+  .foot {
+    text-align:left
+  }
+  body.projecting .layout {
+    padding-top:18px
+  }
+}
+@media(max-width:375px) {
+  .mast {
+    padding-inline:5px
+  }
+  .tool {
+    padding:.4em
+  }
+  .tool svg {
+    display:none
+  }
+  .cover-inner {
+    padding-inline:17px
+  }
+  .brand svg {
+    width:24px
+  }
+  .experiment {
+    grid-template-columns:1fr
+  }
+  .cover-meta {
+    font-size:11px
+  }
+  .notes {
+    font-size:15px
+  }
+  .layout {
+    padding-inline:13px
+  }
+  .cover .deck {
+    font-size:15px
+  }
+}
+@media print {
+  @page {
+    size:A4 portrait;
+    margin:15mm 15mm 17mm
+  }
+  * {
+    box-shadow:none!important
+  }
+  html,body {
+    background:white!important;
+    color:black;
+    font-size:10.5pt;
+    line-height:1.5
+  }
+  body .mast,body .rail,.intro-actions,.progress-wrap,.skip,.foot,.js-only {
+    display:none!important
+  }
+  body .cover,body.projecting .cover {
+    display:block!important;
+    background:white!important;
+    color:black;
+    border-bottom:2px solid #555
+  }
+  .cover:after {
+    display:none
+  }
+  .cover-inner {
+    display:block;
+    padding:8pt 0
+  }
+  .eyebrow,.cover .deck,.cover h1 em,.cover-meta {
+    color:black
+  }
+  .cover h1 {
+    font-size:32pt
+  }
+  .cover-art {
+    display:none
+  }
+  .cover-meta {
+    padding:4pt 0;
+    border:0;
+    font-size:9pt
+  }
+  body .layout,body.projecting .layout {
+    display:block;
+    padding:0;
+    max-width:none
+  }
+  body .chapter,body.projecting .chapter,body.projecting .chapter:not(.active) {
+    display:block!important;
+    border-top:1px solid #999;
+    padding:14pt 0;
+    scroll-margin:0;
+    break-inside:auto
+  }
+  .chapter header {
+    break-after:avoid;
+    margin:0 0 8pt
+  }
+  body .chapter h2,body.projecting .chapter h2 {
+    font-size:20pt
+  }
+  .lead,.visual,body.projecting .chapter .visual {
+    font-size:11pt
+  }
+  .chapter .notes,body.notes-off .notes {
+    display:block!important;
+    font-size:10.5pt;
+    background:#f5f5ef
+  }
+  .notes h3 {
+    break-after:avoid
+  }
+  p,li {
+    orphans:2;
+    widows:2
+  }
+  h3,h4,summary {
+    break-after:avoid
+  }
+  .grid,table,figure,blockquote {
+    break-inside:auto
+  }
+  tr,.grid>div,.experiment>div {
+    break-inside:avoid
+  }
+  .refs,.kicker,figcaption {
+    font-size:8pt
+  }
+  pre,pre code {
+    white-space:pre-wrap;
+    word-break:break-word;
+    color:black;
+    background:#f3f3ef;
+    font-size:8.5pt
+  }
+  pre {
+    overflow:visible;
+    border:1px solid #ccc
+  }
+  body .grid {
+    display:block
+  }
+  body .grid>* {
+    margin:4pt 0;
+    padding:6pt 8pt
+  }
+  a {
+    color:black
+  }
+  .refs {
+    display:block
+  }
+  .refs a {
+    margin-right:.8em
+  }
+  details {
+    display:block
+  }
+  summary {
+    list-style:none
+  }
+  .table-scroll {
+    overflow:visible
+  }
+}
+main {
+  grid-column:2
+}
+.cover-art svg text {
+  letter-spacing:.04em
+}
+.chapter h2:focus {
+  outline:0
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#start">跳到讲稿正文</a>
+<header class="mast">
+<a class="brand" href="#top" aria-label="返回讲稿封面"><svg aria-hidden="true" viewBox="0 0 40 40"><rect width="40" height="40" rx="8" fill="#174d3a"/><g stroke="#dcebbb" stroke-width="3" fill="none"><path d="M9 11h9v9h13M9 29h9v-9M24 9v5h7"/></g><circle cx="31" cy="20" r="2.8" fill="#ff9b65"/></svg><span class="wordmark">Harness 工程讲稿</span></a>
+<nav aria-label="讲稿工具" class="commands">
+<a class="tool" id="toc-toggle" href="#toc" aria-controls="toc"><svg aria-hidden="true" viewBox="0 0 20 20"><path d="M2 4h2m3 0h11M2 10h2m3 0h11M2 16h2m3 0h11"/></svg>目录</a>
+<button class="tool js-only" type="button" id="toggle-notes" aria-pressed="true"><svg aria-hidden="true" viewBox="0 0 20 20"><path d="M2.5 3.5H17v11H9l-4.5 3v-3h-2zM6 7h7m-7 3h5"/></svg><span>隐藏讲者稿</span></button>
+<button class="tool js-only" type="button" id="print"><svg aria-hidden="true" viewBox="0 0 20 20"><path d="M5.5 7V2.5h9V7m-9 7h-3V7h15v7h-3m-9-3h9v6h-9z"/></svg>打印</button>
+<button class="tool strong js-only" type="button" id="mode"><svg aria-hidden="true" viewBox="0 0 20 20"><path d="M2 3h16v11H2zM10 14v3m-4 1 4-2 4 2"/></svg><span>投屏模式</span></button>
+</nav>
+</header>
+<div class="cover" id="top">
+<div class="cover-inner">
+<div><p class="eyebrow">OpenCode · 工程实践分享</p>
+<h1>把一次改动<br><em>交给 Agent</em></h1>
+<p class="deck">从模型的上下文窗口，走到一份能被同事验收的交付物。用 OpenCode Harness 的真实配置，带团队跑一遍任务合同、审查与复盘。</p>
+<div class="intro-actions"><a class="cta" href="#start">开始读讲稿 <span aria-hidden="true">↓</span></a><a href="#setup" class="on-dark">直接看工程演示 ↗</a></div></div>
+<figure class="cover-art" style="border:none;background:none;padding:0">
+<svg viewBox="0 0 500 242" role="img" aria-labelledby="atlas-title atlas-desc" xmlns="http://www.w3.org/2000/svg"><title id="atlas-title">从任务到验收的交接图</title><desc id="atlas-desc">需求进入任务合同，执行产生一份可验收的交付物。检查发现问题时沿下方回路返回执行。</desc>
+<defs><pattern id="mesh" width="15" height="15" patternUnits="userSpaceOnUse"><path d="M15 0H0v15" stroke="#adc7a7" stroke-opacity=".17" fill="none" stroke-width=".8"/></pattern><marker id="cover-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="m0 0 8 4-8 4" fill="none" stroke="#d9e8be" stroke-width="1.4"/></marker></defs>
+<rect x="1" y="1" width="498" height="240" rx="8" fill="#174535" stroke="#64826d"/><rect x="1" y="1" width="498" height="240" rx="8" fill="url(#mesh)"/>
+<g stroke="#92ac93" fill="none" stroke-width="1.1"><path d="M16 27V15h12m444 0h12v12M16 215v12h12m444 0h12v-12"/></g>
+<g stroke="#d9e8be" fill="none" stroke-width="2.2"><path d="M69 111h73" marker-end="url(#cover-arrow)"/><path d="M224 111h58" marker-end="url(#cover-arrow)"/><path d="M348 111h60" marker-end="url(#cover-arrow)"/></g>
+<g stroke="#ff9c69" fill="none" stroke-width="2" stroke-dasharray="5 4"><path d="M432 138v37a10 10 0 0 1-10 10H324a9 9 0 0 1-9-9v-21"/><path d="m309 161 6-8 6 8" stroke-dasharray="none"/></g>
+<g stroke="#dbe8bd" stroke-width="2.4" fill="#22533e"><circle cx="49" cy="111" r="19"/><path d="m40 111 6 6 12-13"/><rect x="153" y="77" width="64" height="66" rx="5" opacity=".6"/><rect x="147" y="71" width="64" height="66" rx="5" fill="#396444"/><path d="M161 88h35m-35 12h27m-27 12h33m-33 12h19"/><path d="m314 79 31 16v31l-31 18-30-18V95z" fill="#366546"/><path d="m284 95 30 17 31-17m-31 17v31"/><circle cx="432" cy="111" r="22" fill="#dce6bd"/></g><path d="m421 111 8 8 14-17" stroke="#214d37" stroke-width="3.5" fill="none"/>
+<g font-family="system-ui,sans-serif" font-size="14" font-weight="650" text-anchor="middle" fill="#f1f4df"><text x="49" y="64">需求</text><text x="178" y="54">合同</text><text x="314" y="62">执行</text><text x="432" y="64">验收</text></g><text x="373" y="212" font-family="system-ui,sans-serif" font-size="13" text-anchor="middle" fill="#ffbd96">携带证据返工</text>
+</svg><figcaption>一次任务中的授权、执行与反馈</figcaption></figure>
+</div><div class="cover-meta"><span>研发团队分享 · 16 讲 · 约 54 分钟，含演示与讨论</span><span>项目版本 <code>chinese / 5e6063a</code></span></div></div>
+<div class="layout">
+<aside class="rail" id="toc" aria-label="讲稿目录"><button class="tool rail-close" id="close-toc" type="button">关闭目录</button><nav aria-label="章节导航"><h2 class="toc-title">讲稿目录</h2>
+<p class="toc-group">开场</p><ol class="nav-list" start="1">
+<li><a href="#start"><span class="num">01</span>一次改动如何验收</a></li>
+</ol>
+<p class="toc-group">模型与上下文</p><ol class="nav-list" start="2">
+<li><a href="#model"><span class="num">02</span>模型与 Token</a></li>
+<li><a href="#truth"><span class="num">03</span>幻觉与验证</a></li>
+<li><a href="#packing"><span class="num">04</span>上下文怎么选</a></li>
+<li><a href="#long-context"><span class="num">05</span>有效上下文与评测</a></li>
+<li><a href="#memory"><span class="num">06</span>长任务如何接续</a></li>
+</ol>
+<p class="toc-group">Agent 设计</p><ol class="nav-list" start="7">
+<li><a href="#loop"><span class="num">07</span>谁决定下一步</a></li>
+<li><a href="#tools"><span class="num">08</span>工具怎样设计</a></li>
+<li><a href="#skills"><span class="num">09</span>Skill 如何沉淀经验</a></li>
+<li><a href="#delegation"><span class="num">10</span>什么时候拆子任务</a></li>
+</ol>
+<p class="toc-group">工程实操</p><ol class="nav-list" start="11">
+<li><a href="#map"><span class="num">11</span>工程地图</a></li>
+<li><a href="#setup"><span class="num">12</span>启动和第一个需求</a></li>
+<li><a href="#contract"><span class="num">13</span>现场校验一份合同</a></li>
+<li><a href="#delivery"><span class="num">14</span>从审查到复盘</a></li>
+</ol>
+<p class="toc-group">验收与团队</p><ol class="nav-list" start="15">
+<li><a href="#eval"><span class="num">15</span>用什么证据验收</a></li>
+<li><a href="#team"><span class="num">16</span>把试点变成团队资产</a></li>
+</ol></nav></aside><main id="manuscript">
+<section class="chapter" id="start" data-part="开场" data-title="一次改动如何验收" data-min="2">
+<header><p class="kicker">开场 · 01</p><h2>新人问“这次可以改哪里”，该让他看什么？</h2><p class="lead">先用一页术语表做实验。下周换一位同事，他能否找到当初允许改的文件，复述谁检查过，以及凭什么交付？</p></header>
+<div class="visual"><div class="grid"><div><h3>合同</h3><p>把目标、改动边界和验收办法写成一份可检查的约定。</p></div><div><h3>Trace ID</h3><p>为同一次任务的合同、交接与复盘保留共同的追踪标识。</p></div><div><h3>复盘</h3><p>对照预期和实际结果，记录失败原因、证据及后续改进。</p></div></div></div>
+<div class="notes"><h3>讲者稿</h3><p>各位先替我做一次验收。屏幕上有三个词，如果我告诉大家“AI 已经把它们写进新人手册了”，你接下来会打开什么？有人会看文件，有人会看提交记录，还有人想知道，这三个解释究竟从哪里来。保留这个问题，演示时我们来试试，每一种检查能给出什么答案。</p><p>在今天这个工程里，Harness 指围绕模型运行的那套工程设施。OpenCode 提供运行环境，模板安排角色、提供工具、约束文件范围，并规定如何审查和留下证据。先看模型完成一轮任务到底能见到什么，再回到真实仓库，让同一个需求走一遍。结束时，大家可以拿自己的一个小任务替换这张术语表。</p></div>
+<p class="refs">项目入口 <a href="../README.md">README</a><a href="../AGENTS.md">AGENTS.md</a></p>
+</section>
+
+<section class="chapter" id="model" data-part="模型与上下文" data-title="模型与 Token" data-min="3">
+  <header><p class="kicker">02 / 模型与上下文</p><h2>下一轮，模型还知道什么？</h2><p class="lead">把“只给新人解释三个词”从下一轮请求里拿掉，模型还能凭什么知道这条约定？</p></header>
+  <div class="visual">
+    <figure>
+      <div class="flow"><span>请求 ①<br><strong>任务与约定</strong></span><span>模型生成<br><strong>初版术语表</strong></span><span>请求 ②<br><strong>约定＋初版＋反馈</strong></span></div>
+      <figcaption>第二次推理能使用的历史，来自应用传入或服务端恢复的会话状态。</figcaption>
+    </figure>
+    <p class="callout"><strong>课堂口算</strong>　连续四次调用的输入各为 2K、3K、4K、5K。最后一轮占用 5K，四轮累计处理了 <strong>14K 输入 Token</strong>。</p>
+  </div>
+  <div class="notes"><h3>讲者稿</h3>
+    <p>先请大家想一想，我们请模型把术语表写给新人，过两分钟再说“第二条举个例子”，它怎么知道第二条是什么？文字先由分词器切成 Token，模型结合本次可见的信息，给下一个 Token 算出概率，逐步生成回答。训练让它学到语言和大量知识。此刻这张术语表的草稿和我们的临时约定，则由会话系统保存，下一次生成时重新提供。即使界面只显示一句追问，背后的可见输入也可能包含几页材料。</p>
+    <p>算一笔小账。假设首轮有 2K，此后每轮把新增的 1K 加回历史，四次的账是 2＋3＋4＋5。按这个假设，轮数越多，累计输入会近似随轮数平方增长。真实账单还要分别核算普通输入、命中缓存的输入和输出 Token，各用相应单价；有的任务，长篇输出也很贵。服务端代管历史可以省去客户端重复传输，保留下来的历史仍占本轮可用上下文。项目评估时，要从每次调用的 usage 取数。</p>
+    <p>一个 Token 可以是词、字的一部分或标点。中文和英文表达同一意思，计数取决于分词器和写法，有些中译句会用得更多。用目标模型对一段真实的中英文任务书计数，才能估得准。接下来再问一步，模型能流畅写完三个定义，我们凭什么相信它写对了？</p>
+  </div>
+  <p class="refs"><a href="https://developers.openai.com/api/docs/guides/conversation-state">OpenAI · 会话状态</a> · <a href="https://help.openai.com/en/articles/4936856-what-are-tokens-and-how-to-count-them">OpenAI · Token 如何计数</a></p>
+</section>
+
+<section class="chapter" id="truth" data-part="模型与上下文" data-title="幻觉与验证" data-min="3">
+  <header><p class="kicker">03 / 模型与上下文</p><h2>“听起来对”，交给谁来验？</h2><p class="lead">问清一个术语的含义，和确认仓库里某个脚本确实存在，需要两种证据。</p></header>
+  <div class="visual">
+    <table><caption>OpenAI 论文介绍中的 SimpleQA 实验（2025）</caption><thead><tr><th scope="col">受测模型</th><th scope="col">答对</th><th scope="col">答错</th><th scope="col">弃答</th></tr></thead><tbody><tr><th scope="row">gpt-5-thinking-mini</th><td>22%</td><td>26%</td><td>52%</td></tr><tr><th scope="row">OpenAI o4-mini</th><td>24%</td><td>75%</td><td>1%</td></tr></tbody></table>
+    <p class="callout">只看准确率，两者差 2 个百分点。把错误单列，差距达到 49 个百分点。一次评测怎样记分，会影响我们愿意选哪种行为。</p>
+  </div>
+  <div class="notes"><h3>讲者稿</h3>
+    <p>假如我问一个人的冷门论文题目，模型可能拼出一行像极了学术论文的标题。训练文本里论文标题的写法反复出现，一个具体标题出现的证据却可能很弱。再看这张表，如果答“不知道”得零分，猜中尚有机会得分，只看准确率的评测就给猜测留了优势。模型可以表达不确定，我们得让诚实的弃答在验收中有位置。</p>
+    <p>回到工程。假设术语表写了“所有前置 Hook 都已经实现”。我先让作者把结论指向文件，再请审查者对照 Hook 目录和实际脚本，最后运行其中可执行的检查。证据不全就写“无法确认”，附上缺少哪项材料。涉及发布或其他高影响决策，由有责任和权限的人依据证据签字。这样，一句“请诚实回答”就变成了一个大家能检查的步骤。</p>
+    <p>给模型选第一批任务时，先估验证成本。翻译可以逐段对原文，改写可以核对意图，文案可以按读者与事实清单审阅。代码可以先写规格（SDD）或失败测试（TDD），再跑测试、类型检查和真实依赖调用，以发现编造的包或 API。小测试通过，只能证明它覆盖的行为。实时数据需要带时间的权威来源，罕见事实和医疗、法律等高影响判断需要更强的证据及人工核验。我们已经知道该找证据，下面看看每轮该给模型多少证据。</p>
+  </div>
+  <p class="refs"><a href="https://openai.com/index/why-language-models-hallucinate/">OpenAI · Why language models hallucinate</a> · <a href="../.opencode/constraints/contract-mechanism.md">仓库 · Hook 实现清单</a></p>
+</section>
+
+<section class="chapter" id="packing" data-part="模型与上下文" data-title="上下文怎么选" data-min="3">
+  <header><p class="kicker">04 / 模型与上下文</p><h2>如果只能带一页材料进场</h2><p class="lead">为了写对三个术语，执行者需要知道允许改哪份文件、三个词怎样用，以及交付后谁来核对。</p></header>
+  <div class="visual">
+    <div class="grid"><div><h3>每轮保留</h3><p>当前目标、角色权限、输出约定、必须遵守的约束。</p></div><div><h3>用时再取</h3><p>定义合同才读 Schema，解释追踪才读 R-16，核对复盘才读角色说明。</p></div></div>
+    <figure><div role="img" aria-label="128K 教学预算：指令与工具 8K、任务及摘要 12K、当前证据 64K、近期反馈 20K、输出和推理 24K" style="display:flex;height:1.15rem;overflow:hidden;border:1px solid #43594f;border-radius:.18rem"><span style="flex:8;background:#234a40"></span><span style="flex:12;background:#3b7163"></span><span style="flex:64;background:#719886"></span><span style="flex:20;background:#e3aa71"></span><span style="flex:24;background:#8c4c36"></span></div><figcaption>128K 教学预算，按图从左到右为指令与工具 8K、任务及摘要 12K、当前证据 64K、近期反馈 20K、输出及适用的推理余量 24K。</figcaption></figure>
+  </div>
+  <div class="notes"><h3>讲者稿</h3>
+    <p>现在桌上放着四份东西，当前合同、全仓日志、团队三年的事故记录、Trace ID 规则。要写 Trace ID，我先拿合同和规则；等讲到事故再去查那一条记录。我用一个问题决定保留什么：删了这段，当前任务还做得对吗？按这个办法挑够用且信号最强的材料，最后拿任务成功率检验选得对不对。</p>
+    <p>打开项目的 <code>opencode.jsonc</code>，<code>instructions</code> 显式引用 AGENTS、合同机制、TypeScript 和 React 约束。做纯文档任务时，可以向听众追问，React 细则对今天的交付贡献了什么？这就是接入业务时可以实际衡量的常驻开销。分析者还会给出 <code>suggested_skills</code>，执行者到需要的步骤再读对应 Skill 和引用材料。工具输出先给命中行或摘要，完整证据留一个可回看的位置。</p>
+    <p>图里的 128K 刚好分完，只是练习。分给输出和推理的 24K 要同时满足服务商的输出限制与计数口径。证据不足时可以多取；重复的日志先去重。对银行转账失败的题目，账务约束、支付重试语义和对应的失败日志，比整本操作手册更贴题。企业 RAG 可以先检索候选、精排、去重、补齐相邻段落，再带来源拼成上下文。选好材料后，还要验证模型能否在长文里用对它。</p>
+  </div>
+  <p class="refs"><a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">Anthropic · 上下文工程</a> · <a href="../opencode.jsonc">仓库 · 常驻指令</a> · <a href="../.opencode/agents/analyzer.md">仓库 · 分析者的交付物</a></p>
+</section>
+
+<section class="chapter" id="long-context" data-part="模型与上下文" data-title="有效上下文与评测" data-min="5">
+  <header><p class="kicker">05 / 模型与上下文</p><h2>128K 能放下，关键信息能找回吗？</h2><p class="lead">窗口是容量，长度是本次占用，有效上下文是模型在给定任务和质量门槛下能可靠利用的范围。</p></header>
+  <div class="visual">
+    <figure><svg viewBox="0 0 520 160" width="520" style="display:block;width:100%;max-width:32.5rem;height:auto;margin:0 auto" role="img" aria-labelledby="context-plot-title context-plot-desc"><title id="context-plot-title">相同长度下，证据位置可能影响正确率</title><desc id="context-plot-desc">概念示意。横轴是证据在文本中的位置，纵轴是任务表现。曲线在开头与结尾较高，中段偏低，无实测刻度。</desc><g fill="none" stroke="#99a79c" stroke-width="1.5"><path d="M60 20v100h415"/><path d="M60 70h415" stroke-dasharray="4 6"/></g><g font-family="sans-serif" font-size="16" fill="#244d41"><text x="10" y="25">较好</text><text x="10" y="119">较差</text></g><path d="M75 34C145 38 161 98 263 100S389 53 455 40" fill="none" stroke="#b35e3c" stroke-width="5" stroke-linecap="round"/><g fill="#173c32"><circle cx="75" cy="34" r="5"/><circle cx="263" cy="100" r="5"/><circle cx="455" cy="40" r="5"/></g><g font-family="sans-serif" font-size="16" text-anchor="middle" fill="#244d41"><text x="75" y="148">开头</text><text x="263" y="148">中间</text><text x="455" y="148">结尾</text></g></svg><figcaption>位置效应概念示意，无实测刻度。Lost in the Middle 在部分多文档问答和键值检索任务上观察到这类走势。</figcaption></figure>
+    <p class="callout"><strong>提问</strong>　把清算约束从银行设计文档的第 5 页移到第 50 页，答案变了。你会怎样验证是位置、噪声，还是推理出了问题？</p>
+  </div>
+  <div class="notes"><h3>讲者稿</h3>
+    <p>设想一百页设计文档，第 5 页有架构，第 50 页有清算约束，第 95 页是总结。即使一百页全在输入里，模型也可能漏掉正中间那条约束。把同一证据挪到开头或末尾，再问完全相同的问题，就能单独观察位置的影响。这里讨论的是信息进入了窗口后有没有被用上。长上下文引起的检索或指令遵循退化常被称为 Context Rot；位置效应是其中一种表现。</p>
+    <p>再换一道题。找到 Redis 超时配置，只需定位并抄出一个值；判断支付重试会不会导致重复记账，需要把交易、清算和账务三个系统的约束串起来。NoLiMa 减弱问题和证据的字面重合，要求模型从语义联系中定位信息。RULER 在 2024 年对 17 个模型做了 13 类任务，在其设定门槛下，约半数在 32K 仍表现合格。这些历史结果适合拿来设计今天的测试，具体模型仍要实测。</p>
+    <p><strong>为什么长度会产生影响？</strong> 标准自注意力按相关性分配权重，可写为 Attention(Q,K,V) = softmax(QKᵀ/√d<sub>k</sub>)V。Q 是当前位置的查询，K、V 是可见位置的键和值。稠密注意力预填充的计算量为 O(n²d)，因果掩码下可见关系约为 n(n＋1)/2。固定维度，把长度从 8K 依次翻到 16K、32K、64K、128K，注意力这部分的理论计算量相对值约为 1、4、16、64、256。Softmax 会选择性加权，无法从这组数字推导准确率或账单。FlashAttention 改善内存读写，仍计算精确注意力。滑动窗口和稀疏注意力改变连接范围。生成阶段还涉及 KV 缓存的容量与读写。</p>
+    <p><strong>怎么给自己的业务定预算？</strong> 先给模型恰好够用的材料，再补必需证据，最后逐步插入重复、冲突和无关材料。前半程可能因证据变全而提高正确率，后半程可能因干扰而下降。固定模型版本、问题、证据和评分表，跑 4K、8K、16K、32K、64K、128K 六档，每档把证据放在首、中、尾，多次运行。题库同时包含单点检索、跨文档多跳、冲突和无解问题。记录答案正确率、必需证据召回、指令遵循率、无依据回答率、首中尾表现差、首 Token 与总时延、输入/缓存/输出成本。用达到质量门槛的档位部署，给缺证据时的检索留余量。</p>
+    <p>拿术语表做最小练习，先让模型找出哪些报告要带 Trace ID，再让它解释两份不同任务编号的合同为什么能属于同一次工作。后一问答错时，要分清是模型压根没找到证据，还是找到了却推错了。长任务还有第三种可能，证据曾经进过窗口，接手时却已经丢了。</p>
+  </div>
+  <p class="refs"><a href="https://aclanthology.org/2024.tacl-1.9/">Lost in the Middle（TACL 2024）</a> · <a href="https://arxiv.org/abs/2404.06654">RULER（2024）</a> · <a href="https://arxiv.org/abs/2502.05167">NoLiMa（2025）</a> · <a href="https://arxiv.org/abs/1706.03762">Transformer 原论文</a> · <a href="https://arxiv.org/abs/2205.14135">FlashAttention 原论文</a></p>
+</section>
+
+<section class="chapter" id="memory" data-part="模型与上下文" data-title="长任务如何接续" data-min="3">
+  <header><p class="kicker">06 / 模型与上下文</p><h2>明天换人，凭什么接得上？</h2><p class="lead">把当前事实写进可回查的记录，让下一位执行者知道目标、已验结果和接下来要做什么。</p></header>
+  <div class="visual">
+    <div class="grid"><div><h3>压缩前的记录</h3><p>两次目录清单、三段完整 Schema、若干次措辞修改、一次校验输出，夹着一句“只写给新人”。</p></div><div><h3>可交接的摘要</h3><p>给新人解释合同、Trace ID、复盘。沿用一个追踪号以串起各阶段。合同格式已验；三个定义尚待逐条对照源文件。下一步交给审查者。</p></div></div>
+    <p class="callout"><strong>教学示例</strong>　把目标、范围、决策及理由、已验证的结果、未完成项和证据路径留全，再压缩文字。</p>
+  </div>
+  <div class="notes"><h3>讲者稿</h3>
+    <p>如果直接扔掉最早几轮，“只写给新人”可能跟着第一次提问一起消失。模型仍能继续写一份措辞专业的词典，哪怕方向已经跑偏。请大家用上面的摘要做个交接练习：你现在敢签字说三个定义都准确吗？摘要只说格式已验，接手的人应该去读定义和它对应的项目文件。完整日志可以留在外部，摘要给出报告位置、任务编号和可复核结论。</p>
+    <p>压缩可以去掉重复的工具输出、已解决的试错和寒暄。先列出不可丢的事实，再逐项核对，最后缩短措辞。即使把 5 万 Token 设想成压到 500，那个数字也只是一道练习题；恢复任务后能守住早期约束、避开重复工作，才算压缩有效。较短任务用一份 Markdown 进展笔记或合同就能接续。材料多到不便人工定位时，可用 RAG 从外部记忆取回片段。落盘负责保存，检索负责召回，错检、漏检和检索结果挤占窗口都要测。</p>
+    <p>这个模板把任务状态写入合同，用 <code>trace_id</code> 串联报告，复盘另行落盘；运行材料按仓库的 Git 忽略规则管理，跨机器移交时要安排共享存储。项目的 V1 风格配置启用 <code>compaction.auto</code> 与 <code>prune</code>，将 <code>reserved</code> 设为 10000，给接近容量上限时的后续处理留缓冲。这个值描述压缩预留空间。V2 迁移指南将该字段改名为 <code>buffer</code>，旧的 <code>prune</code> 会被忽略并提示。具体运行要看使用的版本。OpenAI 的 Compaction 则展示了另一种由服务端携带压缩状态的方式。把状态交接清楚之后，谁来读它、选工具、决定下一步？这就轮到 Agent 的循环了。</p>
+  </div>
+  <p class="refs"><a href="../opencode.jsonc">仓库 · 压缩配置</a> · <a href="../.opencode/rules/R-16_trace-id.md">仓库 · Trace ID</a> · <a href="../.gitignore">仓库 · 运行材料的忽略规则</a> · <a href="https://opencode.ai/docs/migrate-v1">OpenCode · 版本迁移</a> · <a href="https://developers.openai.com/api/docs/guides/compaction">OpenAI · Compaction</a></p>
+</section>
+
+<section class="chapter" id="loop" data-part="Agent 设计" data-title="谁决定下一步" data-min="3">
+  <header><p class="kicker">Agent 设计 · 07</p><h2>看到结果之后，谁决定下一步？</h2><p class="lead">流程可以规定“必须验收”。Agent 要根据验收结果，决定接下来该查什么、改什么或何时停手。</p></header>
+  <div class="visual">
+    <figure>
+      <div class="callout"><strong>外层 · 一次用户交互</strong>　接收需求 → 交给内层循环 → 交付结果，或向用户补问关键条件</div>
+      <div class="flow"><span>感知<br><small>读需求和合同</small></span><span>规划<br><small>选证据、定动作</small></span><span>行动<br><small>查文件、跑校验</small></span><span>观察<br><small>读结果、作判断</small></span></div>
+      <figcaption>内层 · 证据缺失就带着新信息回到规划，达到验收条件就结束。异步任务也可以由事件启动这套循环。</figcaption>
+    </figure>
+  </div>
+  <div class="notes"><h3>讲者稿</h3>
+    <p>想象一下，给校验脚本传一份 JSON，同一个输入按固定规则得到结果。这种路径很适合写成 Workflow。现在给 Agent 一个开放的问题：“新人怎样顺着 Trace ID 找到一次任务的复盘？”它可能先读命名规则，再翻合同和报告；如果报告缺失，就要判断是链接错、产物没保存，还是当前证据只能支持一句“无法确认”。决定后一步所依据的，是前一步的观察。单轮问答只生成一个答案，这里多了一条从结果返回决策的路。</p>
+    <p>外层和内层是讲解交互式 Agent 的一个模型。项目把分析、签合同、审查和复盘写进角色规范。角色在这些阶段里，仍要选择证据、比较方案、应对异常。能用脚本确定的字段和时效检查交给脚本，只有会随观测变化的部分才值得承担模型的等待时间和费用。</p>
+    <p>现在请大家判一下三种错。把“写给新人”听成“给审计员写规范”，是<strong>规划错</strong>，合同里应写清读者和目标。把合同路径传给另一份任务，是<strong>行动错</strong>，要核对路径与 task_id。看到“合同验证通过”就宣布“三条定义都正确”，是<strong>观察错</strong>。最后一种会把错误结论传给下一阶段。此时应打开术语表逐条对照出处。下一章就看看，工具怎样帮助 Agent 读对这条证据。</p>
+  </div>
+  <p class="refs"><a href="https://www.anthropic.com/engineering/building-effective-agents">Anthropic · Building effective agents</a> · <a href="../.opencode/agents/coordinator.md">本仓库 · 协调者的决策点</a></p>
+</section>
+
+<section class="chapter" id="tools" data-part="Agent 设计" data-title="工具怎样设计" data-min="3">
+  <header><p class="kicker">Agent 设计 · 08</p><h2>把一次校验设计成一个工具</h2><p class="lead">模型选工具时读它的描述，调工具时传参数，拿到返回值后决定怎么走。三处都需要为调用者写清楚。</p></header>
+  <div class="visual">
+    <figure><div class="flow"><span>指定合同<br><small>contract_path</small></span><span>工具内部<br><small>读 Schema、检查时效</small></span><span>返回结论<br><small>通过或失败原因</small></span></div>
+    <figcaption>项目工具 <code>validate-contract</code> 的调用示意。日期子目录里的合同要传完整的仓库相对路径。</figcaption></figure>
+    <pre><code>{"contract_path": ".opencode/contracts/20261124/20261124_DOCS_001.json"}</code></pre>
+  </div>
+  <div class="notes"><h3>讲者稿</h3>
+    <p>如果把“校验术语表的合同”拆成列目录、读所有合同、读 Schema、叫模型算时间，大家猜哪一步最贵？挪进窗口的每份无关合同，都要占这一轮的 token。项目工具接收一个可选的 <code>contract_path</code>，在内部用 Ajv 校验，再比较时间戳。成功时返回带合同 ID 和文件名的文本，失败时列错误字段并提示修正后重验。它当前默认只枚举合同根目录里的 JSON；选中按日期归档的文件，要像屏幕上这样明确传路径。这也是为什么一次调用看起来成功，还得核对它实际查了谁。</p>
+    <p>设计别的工具时，我会问四件事。第一，能否按人的一项工作合并步骤，例如由 <code>schedule_event</code> 查空闲并安排会议；涉及写入时要保留授权边界。第二，名字能否指清去处，例如 <code>log_search</code> 查运行日志，<code>jira_search</code> 查工单。第三，能否直接回传人名、文件类型、项目路径等有语义的字段，还要更新对象时再附 ID。第四，能否让工具内部过滤、分页、截断，把下一页指针一并给出。例如 <code>search_contacts</code> 只回候选联系人。一个权限错误也应告诉调用者哪个资源受限、该向谁申请。</p>
+    <p>工具描述是一段供模型选择动作的提示词。把适用任务、需要的参数、返回值、下一步用法和适用边界写明，再拿真实请求试它。Anthropic 在一项 MCP 工具实验里反复试用有缺陷的工具并改写描述，后续 Agent 的任务耗时下降了 40%。要估计自己的收益，可以在同一组合同上分别记录改描述前后的错选次数和耗时。</p>
+  </div>
+  <p class="refs"><a href="../.opencode/tools/validate-contract.ts">本仓库 · 工具描述、入参和输出</a> · <a href="https://www.anthropic.com/engineering/writing-tools-for-agents">Anthropic · 工具设计</a> · <a href="https://www.anthropic.com/engineering/multi-agent-research-system">40% 的具体实验</a></p>
+</section>
+
+<section class="chapter" id="skills" data-part="Agent 设计" data-title="Skill 如何沉淀经验" data-min="2">
+  <header><p class="kicker">Agent 设计 · 09</p><h2>同样能读写文件，怎样教会它审稿？</h2><p class="lead">工具提供动作，Skill 装进团队做这件事的方法。用到哪一步，就读到哪一层。</p></header>
+  <div class="visual">
+    <figure><div class="flow"><span>先看元数据<br><small>名称和触发条件</small></span><span>匹配再读正文<br><small>步骤、标准、资源入口</small></span><span>按需取资源<br><small>示例、模板、检查单</small></span></div>
+      <figcaption>教学示例的触发描述可以这样写：“当为新人新增或修改术语表，需要核对每条定义的仓库出处时使用。”</figcaption></figure>
+  </div>
+  <div class="notes"><h3>讲者稿</h3>
+    <p>现在我把同一个读文件工具分给两位新同事。一个只知道“看看术语表”，另一个知道每条定义都要对照能证明它的实现。两个人的操作权限一样，验出来的质量可能差很多。我们可以把第二个人的办法写成 Skill，让经验跟着仓库走。把所有规范放进每轮提示会反复占用上下文，还容易把别的任务标准带进来。</p>
+    <p>假设我们设计一个术语审稿 Skill。它先用一句 description 说清何时触发；正文只列三个动作：定位读者、核对定义、登记缺证据项；遇到争议才读正反例。十行也能写完这样的主干，复杂任务按需要展开。看看模板里已有的 <code>git-commit</code>，它给出了规范、例子和验证命令；<code>opencode-extend</code> 在正文里展开了多类扩展示例。项目也有按名定位的 <code>crash-doctor</code> 文档。团队可以逐份核对元数据和发现方式，并在正文变长时把低频材料拆开。投给新人一句“改术语表里的错别字”，看看他们会不会误触发整套事故诊断，这样就能测试触发条件写得准不准。</p>
+  </div>
+  <p class="refs"><a href="https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills">Anthropic · Agent Skills 与渐进披露</a> · <a href="../.opencode/skills/git-commit/SKILL.md">提交规范</a> · <a href="../.opencode/skills/opencode-extend/SKILL.md">OpenCode 扩展指南</a> · <a href="../.opencode/skills/crash-doctor/SKILL.md">故障诊断</a></p>
+</section>
+
+<section class="chapter" id="delegation" data-part="Agent 设计" data-title="什么时候拆子任务" data-min="3">
+  <header><p class="kicker">Agent 设计 · 10</p><h2>多开一个 Agent，它需要知道什么？</h2><p class="lead">三种情况值得考虑拆分：资料挤满上下文、角色职责相冲突、上游错误会传遍后续步骤。</p></header>
+  <div class="visual">
+    <figure><div class="grid">
+      <div><h3>派出去</h3><p>给审查者同一个 Trace ID、合同路径、术语表和三条判定标准。</p></div>
+      <div><h3>收回来</h3><p>返回每条结论、证据位置、未确认项。长日志留在可追溯的位置。</p></div>
+    </div><figcaption>Orchestrator–Worker 模式。协调者负责拆解、交接和验收，角色围绕一份明确的任务书工作。</figcaption></figure>
+  </div>
+  <div class="notes"><h3>讲者稿</h3>
+    <p>如果术语表只改一个错别字，七个角色同时读一遍，大约只会多出七份阅读成本。模板用角色来划清责任。当写作者同时给自己打分，职责冲突已经出现；当上一位写错 Trace ID 会让后来的人整段走错，隔离审查就有了价值。仓库里，<code>coordinator</code> 能派单和编辑合同，<code>analyzer</code> 只读分析，<code>task-executor</code> 按合同动手，<code>code-reviewer</code> 只读审查，<code>tester</code> 跑测试，<code>builder</code> 做构建验证，<code>retro</code> 记录复盘或事故。测试和构建是否需要，要看这份任务。主配置把子代理委派权收在协调者手上；角色提示、工具权限和实际执行范围要一同看。</p>
+    <p>交接时，我会把“请审核”改成“检查三个术语是否各有定义和文件依据，返回逐项结论、位置和疑问”。新会话能看见多少历史取决于运行时传递了什么。给得太少会漏约束，给得太多会把整个主窗口的成本复制一遍。报告可以短到三行，也可将复杂探索整理为一两千 token 的摘要，标准是接手人能否据此作决定并追到证据。</p>
+    <p>拆分还有两笔账，额外的模型调用，以及写任务书、收结果、重做遗漏项的协调成本。Anthropic 报告，在其研究系统的观测中，多 Agent 系统消耗的 token 约为普通聊天的 15 倍；团队要用自己的任务成功率和成本再算一遍。现在请一位听众试着口头派这单，只说目标、权限、证据和交付物。接下来我们打开仓库，看这四样分别放在哪个文件里。</p>
+  </div>
+  <p class="refs"><a href="../opencode.jsonc">本仓库 · 七个角色与权限</a> · <a href="../.opencode/agents/task-executor.md">执行交接格式</a> · <a href="https://www.anthropic.com/engineering/multi-agent-research-system">Anthropic · 多 Agent 研究系统</a></p>
+</section>
+
+<section class="chapter" id="map" data-part="工程实操" data-title="工程地图" data-min="3">
+<header><p class="kicker">工程实操 · 11</p><h2>打开这个仓库，先沿三条线找证据</h2><p class="lead">谁能做决定，看角色和权限。动手前约定了什么，看合同。发生了什么，看实际运行过的检查与记录。</p></header>
+<div class="visual"><table><thead><tr><th scope="col">要回答的问题</th><th scope="col">从哪里读起</th><th scope="col">本仓库中能看到什么</th></tr></thead><tbody>
+<tr><td>谁接任务？</td><td><code>opencode.jsonc</code><br><code>.opencode/agents/</code></td><td>默认主代理是 <code>coordinator</code>。它可委派子代理，编辑仅限合同目录。分析者与审查者均禁用编辑和 Bash。</td></tr>
+<tr><td>哪些知识随任务加载？</td><td><code>AGENTS.md</code><br><code>rules/</code>、<code>constraints/</code>、<code>skills/</code> 位于 <code>.opencode/</code></td><td>配置显式引用项目入口、合同机制、TypeScript 与 React 约束。规则索引 R-01 至 R-18 指向细则，本版另有 16 项 Skill。</td></tr>
+<tr><td>哪些要求有机器检查？</td><td><code>.opencode/contracts/contract-schema.json</code><br><code>.opencode/tools/</code>、<code>plugins/</code>、<code>hooks/</code></td><td>原生工具校验合同。三个本地插件分别处理编辑范围、疑似密钥及危险命令，另有外部通知插件。</td></tr>
+<tr><td>结束后怎样找到记录？</td><td><code>.opencode/contracts/YYYYMMDD/</code><br><code>.opencode/retros/</code></td><td>阶段各有任务编号，用同一个 Trace ID 串联。合同实例与复盘默认受 Git 忽略，分享或长期留存要另外安排归档。</td></tr>
+</tbody></table></div>
+<div class="notes"><h3>讲者稿</h3><p>请大家先打开 <code>opencode.jsonc</code> 里的 <code>default_agent</code>，然后看同一文件的角色权限。项目有七个角色。协调者负责决定、签合同和验收。分析者查影响和风险，执行者按范围写文件，审查者独立找问题。测试者提供用例和运行证据，构建者在需要时产出构建结果，复盘者整理记录。告诉新人“把需求交给协调者”，他就有了第一步。</p><p>再看 <code>.opencode/hooks/</code>。这里实际有四份 Shell 脚本，分别做合同校验、流程完整性检查、编辑后文件检查和清理。流程规范把 Hook 分成全局、角色、合同三层，<code>workspace-clean</code>、<code>diff-size-guard</code> 仍在合同机制文档里标注为未实现。插件则通过 OpenCode 的工具事件触发。例如合同门禁在 <code>edit</code>、<code>write</code> 前检查活动合同、文件范围和锁冲突。密钥扫描挂在工具执行后的事件，是否写入及告警如何处置仍须用目标环境验证。现场演示可以顺手请大家区分，自己刚读到的证据来自提示词、可运行代码，还是一次真实的运行记录。</p></div>
+<p class="refs"><a href="../opencode.jsonc">主配置与权限</a><a href="../.opencode/constraints/contract-mechanism.md">合同与 Hook 目录</a><a href="../.opencode/plugins/contract-enforcer.ts">合同门禁</a><a href="../.opencode/plugins/secret-leak-scan.ts">执行后扫描</a><a href="../.gitignore">忽略规则</a><a href="https://github.com/gotodsp/opencode-harness-template/tree/5e6063afcd16f877520bb38368fb09f4f1f238f1">本讲采用的固定版本源码</a></p>
+</section>
+<section class="chapter" id="setup" data-part="工程实操" data-title="启动和第一个需求" data-min="4">
+<header><p class="kicker">工程实操 · 12</p><h2>在项目根目录启动，把第一句话交给协调者</h2><p class="lead">先确认运行器、模型与团队命令，再给出一个范围清楚、同事能够验收的小任务。</p></header>
+<div class="visual"><ol>
+<li><strong>准备工作副本。</strong> 可以直接使用这个模板的工作副本。在已有工程接入时，把根目录的 <code>AGENTS.md</code>、<code>opencode.jsonc</code> 和整套 <code>.opencode/</code> 与原配置合并。角色提示词和插件通过路径相互引用。</li>
+<li><strong>确认版本和账号。</strong> 先在根目录运行 <code>opencode --version</code>，按下面对应版本完成接入，再执行 <code>opencode</code> 启动。在交互界面用 <code>/connect</code> 连接模型供应商。核对 <code>model</code>、<code>small_model</code> 和 <code>agent.*.model</code> 的模型 ID 均可用。本模板配置分别引用 DeepSeek Flash 与 Pro。</li>
+<li><strong>让模板认识实际项目。</strong> 填写 <code>AGENTS.md</code> 的技术栈和常用命令，核对 <code>instructions</code>。<code>/build</code>、<code>/lint</code>、<code>/typecheck</code>、<code>/test</code> 示例调用 <code>bun run …</code>；替换成业务仓库能单独跑通的脚本。当前模板根目录没有业务 <code>package.json</code>。</li>
+<li><strong>按运行器版本接入。</strong>
+<ul><li><strong>兼容此模板的 OpenCode V1：</strong> 在练习副本根目录执行 <code>npm install --prefix .opencode --save ajv@8</code>，在 <code>.opencode</code> 声明并安装原生工具依赖。重启会话，确认主角色为 <code>coordinator</code>。显式传入练习合同的 <code>contract_path</code> 调用 <code>validate-contract</code>，再用受门禁保护的编辑工具尝试编辑合同范围外的练习文件，确认工具可用、越界操作被阻止。</li>
+<li><strong>OpenCode V2：</strong> V2 无法直接运行模板的 V1 插件。先按官方迁移说明改写三个本地插件，迁移自定义工具的注册方式，将配置中的本地插件路径指向插件目录。完成迁移并重启后，再做上面两项验证。</li></ul></li>
+</ol><pre><code># 进入含 opencode.jsonc 的项目根目录后执行
+opencode --version
+opencode</code></pre>
+<blockquote><strong>交给 coordinator 的示例需求</strong><p>请给第一次使用本项目的同事写一页术语表，只新增 <code>docs/glossary.md</code>。用简体中文解释合同、Trace ID 和复盘，每个词给一个本仓库出处。验收时，请逐条检查定义和出处，并报告改动文件。请说明本次是否需要业务构建。</p></blockquote></div>
+<div class="notes"><h3>讲者稿</h3><p>现场先把这句话念给大家听。它提供了读者、产物、授权文件和可验标准。执行者可以自己决定行文方式，审查者却不用猜“怎样才算完成”。如果只说“把文档优化一下”，我们无法提前判断做多大才够，最后也无法解释为什么通过。</p><p>这个模板的 <code>compaction</code> 配置保留了 <code>prune</code> 和 <code>reserved</code> 字段。不同主要版本遵循不同的配置规则。使用 OpenCode V2 的团队先对照官方迁移说明处理 <code>reserved</code> 到 <code>buffer</code> 等变化，再核对角色、命令和本地插件是否加载。今天我们可以在装好 Node.js 和 Bash 的机器上直接验证合同脚本。模型供应商调用与整条多 Agent 链路需要在接入后的真实环境分别验收。</p></div>
+<p class="refs"><a href="https://opencode.ai/docs/">OpenCode 安装与连接</a><a href="https://opencode.ai/docs/migrate-v1/#plugins">OpenCode 官方 · V2 插件迁移</a><a href="../opencode.jsonc">模型与角色配置</a><a href="../.opencode/commands/build.md">构建命令模板</a></p>
+</section>
+<section class="chapter" id="contract" data-part="工程实操" data-title="现场校验一份合同" data-min="6">
+<header><p class="kicker">工程实操 · 13</p><h2>只改一个验收项，预测校验器的回答</h2><p class="lead">在同一份新人术语表合同上做两个独立实验。一个换掉验收前缀，另一个只改签发时间。</p></header>
+<div class="visual"><div class="experiment"><div><strong>PASS · 0</strong><p><code>assert: 三个术语均有定义与出处</code>。字段完整，时间有效，合同仍为 <code>pending</code>。协调者完成前置检查后将其切为 <code>active</code>，再交给执行者。</p></div><div><strong>BLOCK · 1</strong><p>同一项写成 <code>TODO</code>，前缀校验失败。另一份格式正确但已过期 31 分钟的副本，会在时效检查被拦下。</p></div></div>
+<details><summary>展开现场命令 · 用 Node.js 和 Bash 复现实验</summary>
+<p>在仓库根目录的 Bash 或 zsh 中整段粘贴。先检查 Node.js 能否加载 Ajv。未安装时，示例用 npm 将 Ajv 装到新建的临时目录，这一步需要网络。三份实验合同也仅写入该目录。演示机预先配置好 Ajv 后可离线运行。</p>
+<pre data-demo><code># 在本仓库根目录运行。依赖放进专用临时目录。
+(
+set -eu
+demo_dir=$(mktemp -d)
+if ! node -e 'require("ajv")' 2&gt;/dev/null; then
+  npm install --prefix "$demo_dir" --no-save --ignore-scripts ajv@8
+  export NODE_PATH="$demo_dir/node_modules${NODE_PATH:+:$NODE_PATH}"
+fi
+
+node - "$demo_dir" &lt;&lt;'JS'
+const fs = require('node:fs');
+const path = require('node:path');
+const { randomUUID } = require('node:crypto');
+const dir = process.argv[2];
+const contract = {
+  task_id: 'DOCS-001',
+  trace_id: randomUUID().replace(/-/g, ''),
+  timestamp: Math.floor(Date.now() / 1000),
+  status: 'pending',
+  goal: '给新人写一页术语表',
+  files_to_modify: ['docs/glossary.md'],
+  constraints: ['contract-mechanism', 'R-03'],
+  verification: ['打开术语表，逐条对照三个定义与出处'],
+  coverage_checklist: { '术语': 'assert: 三个术语均有定义与出处' }
+};
+function save(name, record) {
+  fs.writeFileSync(path.join(dir, name), JSON.stringify(record));
+}
+save('valid.json', contract);
+save('todo.json', { ...contract, coverage_checklist: { '术语': 'TODO' } });
+save('expired.json', { ...contract, timestamp: contract.timestamp - 1860 });
+JS
+
+check_sample() {
+  sample=$1
+  expected_code=$2
+  expected_result=$3
+  actual_code=0
+  output=$(bash .opencode/hooks/validate-contract.sh "$demo_dir/$sample.json" 2&gt;&amp;1) || actual_code=$?
+  printf '%s → 退出码 %s\n%s\n' "$sample" "$actual_code" "$output"
+  actual_result=$(printf '%s\n' "$output" | awk '/^RESULT: / {print $2}')
+  if [ "$actual_code" != "$expected_code" ] || [ "$actual_result" != "$expected_result" ]; then
+    printf '样例 %s 未达到预期：应返回 %s 和 %s。\n' "$sample" "$expected_code" "$expected_result" &gt;&amp;2
+    return 1
+  fi
+}
+check_sample valid 0 PASS
+check_sample todo 1 BLOCK
+check_sample expired 1 BLOCK
+)</code></pre>
+</details>
+<p class="callout"><strong>请现场投票。</strong> 合同返回 PASS，此时能宣布新人术语表已经写对了吗？下一步由谁拿哪份证据来验？</p></div>
+<div class="notes"><h3>讲者稿</h3><p>大家可以把合同看作一次改动的任务书。正式流程中，协调者把分析者的文件清单、适用约束、验证方式和覆盖清单填进 JSON，将合同存到 <code>.opencode/contracts/YYYYMMDD/YYYYMMDD_DOCS_NNN.json</code>。<code>/gen-uuid</code> 产生本轮 Trace ID，<code>/gen-contract</code> 会带入时间戳并自行生成 UUID，定稿时应对齐最初的 Trace ID。对于日期子目录里的文件，调用原生 <code>validate-contract</code> 请显式传 <code>contract_path</code>，它的无参查找只扫描合同根目录。</p><p>先运行第一份。返回 0，只证明它满足 Schema 和这次的时效条件。第二份为什么失败？因为 <code>coverage_checklist</code> 要求以 <code>assert:</code> 或 <code>SKIP:</code> 开头。确实不适用的验收项可以用 <code>SKIP:</code> 记录原因。再看第三份，合同在 31 分钟前签发，脚本读本机时间就能给出另一个可解释的失败。合同通过后仍处于 <code>pending</code>，协调者完成前置检查、将状态切为 <code>active</code>，执行者才进入授权范围内的编辑。</p><p>现在回到刚才的投票。文件存在，要在执行后查。定义是否正确，要把三个解释分别与规则、合同机制和角色职责对照。请一位听众选一个词，指出它的出处究竟支持哪句话。如果演示只能留下一个画面，就留下合同 PASS 与内容验收之间的这一步。</p></div>
+<p class="refs"><a href="../.opencode/contracts/contract-schema.json">完整 Schema</a><a href="../.opencode/commands/gen-contract.md">合同生成命令</a><a href="../.opencode/hooks/validate-contract.sh">实验所用 Shell 校验器</a><a href="../.opencode/tools/validate-contract.ts">原生校验工具</a></p>
+</section>
+<section class="chapter" id="delivery" data-part="工程实操" data-title="从审查到复盘" data-min="4">
+<header><p class="kicker">工程实操 · 14</p><h2>审查发现问题，下一步由谁接手？</h2><p class="lead">同一 Trace ID 串起整项工作。每一次委派都有自己的合同、负责人和可以核对的产物。</p></header>
+<div class="visual"><figure>
+<div class="flow"><span>协调者收需求</span><span>分析者只读分析</span><span>生成并验证合同</span><span>前置 Hook</span><span>按范围执行</span><span>后置 Hook</span></div>
+<div class="flow" style="margin-top:10px"><span>独立审查</span><span>按需测试或构建</span><span>更新合同状态</span><span>复盘</span><span>完成后走 Git 流程</span></div>
+<figcaption>协调者流程规范。Hook 依次按全局、角色、合同三个层次执行，0 为 PASS，1 为 BLOCK，2 为 WARN。具体检查以有实现并实际执行的脚本和插件为准。</figcaption></figure>
+<div class="grid"><div><h3>审查未通过</h3><p>审查者写明位置和原因，分析者给修复计划，协调者签发修复合同，执行者修改后再审。最多修复 3 次，仍失败则转诊断与复盘。</p></div><div><h3>交付已通过</h3><p>记录实际改动和验收结果。需要构建才由 builder 运行，测试由 tester 提供证据。完成复盘后，按项目 Git 合同执行提交与推送。</p></div></div></div>
+<div class="notes"><h3>讲者稿</h3><p>回到术语表。假设作者写对了“复盘”的意思，却把出处链到了测试角色。审查者给出具体词条和错误链接。分析者确认仍然只需动术语表，协调者就能用同一 Trace ID 发起修复。若只是这份 Markdown 改动，验收重点是定义与链接，合同也该写下跳过业务构建的理由。若改到编译入口，构建结果就成了证据链的一环。执行异常或 Hook 阻断时，规范要求进入失败处置和 <code>crash-doctor</code> 诊断，再记录复盘。</p><p><strong>本地历史记录。</strong> 这个工作副本里有一份 2026 年 11 月 24 日的复盘。初次 <code>RETRO-001</code> 超出有效期，被记为 <code>failed</code>。接续的 <code>RETRO-002</code> 沿用原 Trace ID 和范围，最后记为 <code>completed</code>。记录还指出，后置脚本从日期子目录回溯两层时，可能把 <code>.opencode</code> 当作项目根，已有文件也会收到缺失 WARN。遇到这种观察，先核对真实文件与脚本解析的路径，再决定谁应返工。原始复盘位于 <code>.opencode/retros/RETRO-2026-11-24-1236-001.md</code>，属于本地忽略产物；这里已摘出足以讨论的事实。</p></div>
+<p class="refs"><a href="../.opencode/agents/coordinator.md">角色与交接</a><a href="../.opencode/rules/R-14_auto-retry-loop.md">修复循环</a><a href="../.opencode/hooks/post-edit-verify.sh">后置检查的项目根计算</a><a href="../.opencode/agents/retro.md">复盘职责</a></p>
+</section>
+
+<section class="chapter" id="eval" data-part="验收与团队" data-title="用什么证据验收" data-min="4">
+  <header><p class="kicker">验收与团队 · 15</p><h2>一页术语表有很多写法，怎样算合格？</h2><p class="lead">先写出读者可以完成什么动作，再用同一批任务比对成品、运行轨迹和花费。</p></header>
+  <div class="visual">
+    <table><caption>术语表练习可以采用的三层验收口径</caption><thead><tr><th scope="col">层次</th><th scope="col">交给验收者的问题</th><th scope="col">证据</th></tr></thead><tbody>
+      <tr><th scope="row">产物</th><td>新人能否用三个词找到授权、运行和复盘记录？</td><td>三条定义、出处、找记录的实操结果</td></tr>
+      <tr><th scope="row">过程</th><td>执行者按授权改了什么，遇到失败怎样处理？</td><td>有效合同、文件差异、同一 Trace ID 的审查与复盘</td></tr>
+      <tr><th scope="row">资源</th><td>哪些重试拉高了每次成功交付的成本？</td><td>模型用量、工具耗时、最终成功数</td></tr>
+    </tbody></table>
+  </div>
+  <div class="notes"><h3>讲者稿</h3>
+    <p>如果验收只写“内容清晰”，两个人可能得出相反意见。我们拿一条真实会失败的句子来反写标准：“新人把 Trace ID 当成每份合同各自的编号。”那么验收时，给他两份同一次任务、编号不同的阶段合同，看看能否找到它们共有的 Trace ID。先按设计文档列出这种预期，再打开成品和轨迹逐条核对。校验成功、文字正确、读者会用，这三件事要分别取证。</p>
+    <p>从课程回看设计，可以问六个问题。团队是否了解无状态和幻觉，能否控制常驻上下文与外部记忆，工具是否支持有反馈的循环，Skill 是否保存了可复用的方法，分工能否隔离问题，以及工程验收能否覆盖安全、正确性和成本。这是<strong>机制共识、上下文工程、Agent 核心、知识沉淀、编排决策、工程化落地</strong>六格。仓库 R-17 在复盘时另查六个工程支柱：上下文架构、架构约束、自验证循环、前馈控制、反馈控制、熵治理。例如“编辑前验证合同”归前馈控制，“审查后决定返工”归反馈控制。两张清单的用途不同，同一个例子可以分别作答。</p>
+    <p>各项按证据标“符合预期”“有待改进”“不符合预期”，缺证据就登记待补项。把错误归到规划、行动、观察或知识与技能，然后按安全、正确性、成本、体验的顺序处理。比如文档片段中写着“现在去修改另一个文件”，系统应把它当作待解读的数据，写入权仍由受信任的任务和权限层决定。在团队验收中加入这个反例，核对角色最小权限、授权文件与实际差异。风险高的例外由负责人决定并记录。</p>
+    <p>同一批约定样本可以重跑，记录模型版本、通过数、总数、重试数和统计周期。单次成功任务成本等于这批<strong>全部尝试的总成本 ÷ 最终成功交付的任务数</strong>。模型账按输入、输出与服务商实际缓存价格计入，另列工具和人工复核成本。举个教学例子：10 个任务共花 12 元模型费，含失败和重试，8 个最终通过，通过率为 80%，每个成功任务的模型费为 1.50 元。成功数为零时单独报告总支出与失败原因。这样的记录才能比较改 Skill 或拆子 Agent 以后，钱究竟花在了哪里。</p>
+  </div>
+  <p class="refs"><a href="../.opencode/rules/R-17_six-pillars-coverage.md">本仓库 · R-17 六支柱</a> · <a href="../.opencode/rules/R-03_coverage-closure.md">覆盖清单约定</a> · <a href="https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents">Anthropic · Agent 评估方法</a></p>
+</section>
+
+<section class="chapter" id="team" data-part="验收与团队" data-title="把试点变成团队资产" data-min="3">
+  <header><p class="kicker">验收与团队 · 16</p><h2>下位同事还能复现这次交付吗？</h2><p class="lead">把一个人会做的事交给第二个人重跑。接手时卡住的位置，就是下一轮应该补进 Skill、Spec 或测试集的地方。</p></header>
+  <div class="visual">
+    <div class="grid">
+      <div><h3>个人跑通</h3><p>选一个真实小任务。留下需求、交付物、失败样例和成本基线。</p></div>
+      <div><h3>团队沉淀</h3><p>将核对方法写成 Skill，将业务要求写成 Spec，安排同事评审并指定维护人。</p></div>
+      <div><h3>流程升级</h3><p>AI 交付，测试和验收人核对证据。把新失败补进回归集并重跑。</p></div>
+    </div>
+  </div>
+  <div class="notes"><h3>讲者稿</h3>
+    <p>我会从一个人和一页术语表开始。碰到的第一道坎是高手一眼能看出术语写错，同事却复现不了判断过程。请他把“到哪里查、用什么证据比对、何时无法确认”写出来，得到一份 Skill。第二道坎是新人需要哪些信息只存在维护人的脑子里。把读者、使用情境和必须能完成的动作写成 Spec，后续改词时就有依据。第三道坎是各组都说“能用”，尺度却各不相同。保留一份正确样本、一份合同格式错的样本、一份格式全对但术语解释错的样本，共享同一套打分规则和通过率记录。</p>
+    <p>有了第一份可复现的交付，再把 Skill、Spec、测试集纳入版本管理。业务负责人维护要求，工具维护者维护校验器，验收者处理证据薄弱或后果严重的决定。试点团队可以约定每季度或模型、工具大版本升级后重跑固定样本，对照成功率和成功成本。每次复盘附上新增失败样例、期望结果和维护人。这样即使原作者休假，下一位同事也能找到“为什么这样做”的依据。</p>
+    <p><strong>结束时请大家留一分钟。</strong>选一条你们团队常说的“要做对”的要求，把它改写成“给定什么材料，谁能用什么证据判断通过”。回到今天这份模板，把这句话放进第一份任务合同的验收清单。下次分享时带来一份交付物、一条失败轨迹和改过的标准，让同事亲手验一次。</p>
+  </div>
+  <p class="refs"><a href="../.opencode/agents/retro.md">本仓库 · 复盘报告与改进建议</a> · <a href="../.opencode/contracts/contract-schema.json">任务合同字段</a> · <a href="https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents">Anthropic · 从失败样例建立评估</a></p>
+</section>
+</main></div>
+<div class="progress-wrap" aria-label="投屏翻页">
+<div class="progress-line" aria-hidden="true"></div>
+<button id="prev" type="button" class="step" aria-label="上一讲">← 上一讲</button>
+<output id="position" aria-live="polite"></output>
+<button id="next" type="button" class="step" aria-label="下一讲">下一讲 →</button>
+<span class="key-hint">← → 翻页 · Esc 返回全稿</span></div>
+<footer class="foot">本稿可离线阅读、投屏和打印。项目材料链接以本仓库为基准，研究原文链接需联网打开。</footer>
+<script>
+(function () {
+  const body = document.body;
+  const chapters = Array.from(document.querySelectorAll('.chapter'));
+  const navLinks = Array.from(document.querySelectorAll('#toc .nav-list a'));
+  const byId = (id) => document.getElementById(id);
+  const mode = byId('mode');
+  const notesButton = byId('toggle-notes');
+  const tocButton = byId('toc-toggle');
+  let current = 0;
+  let readingNotes = true;
+  let presentingNotes = false;
+  let pendingScroll = false;
+  const isPresenting = () => body.classList.contains('projecting');
+
+  function update(currentIndex) {
+    current = Math.max(0, Math.min(chapters.length - 1, currentIndex));
+    chapters.forEach((chapter, index) => chapter.classList.toggle('active', index === current));
+    navLinks.forEach((link, index) => {
+      if (index === current) link.setAttribute('aria-current', 'location');
+      else link.removeAttribute('aria-current');
+    });
+    byId('prev').disabled = current === 0;
+    byId('next').disabled = current === chapters.length - 1;
+    byId('position').textContent = String(current + 1).padStart(2, '0') + ' / ' + chapters.length;
+    document.querySelector('.progress-line').style.width = ((current + 1) / chapters.length * 100) + '%';
+  }
+
+  function closeToc(restoreFocus) {
+    body.classList.remove('toc-open');
+    tocButton.setAttribute('aria-expanded', 'false');
+    if (restoreFocus) tocButton.focus({preventScroll: true});
+  }
+  function syncNotes() {
+    const visible = isPresenting() ? presentingNotes : readingNotes;
+    body.classList.toggle('notes-off', !visible);
+    notesButton.setAttribute('aria-pressed', String(visible));
+    notesButton.querySelector('span').textContent = visible ? '隐藏讲者稿' : '显示讲者稿';
+  }
+  function moveTo(index, changeHash) {
+    update(index);
+    closeToc(false);
+    if (changeHash) history.replaceState(null, '', '#' + chapters[current].id);
+    const heading = chapters[current].querySelector('h2');
+    heading.focus({preventScroll: true});
+    if (isPresenting()) window.scrollTo(0, 0);
+    else chapters[current].scrollIntoView({block: 'start'});
+  }
+  function setMode(presenting) {
+    body.classList.toggle('projecting', presenting);
+    mode.querySelector('span').textContent = presenting ? '阅读全稿' : '投屏模式';
+    mode.setAttribute('aria-pressed', String(presenting));
+    syncNotes();
+    moveTo(current, true);
+  }
+  function findReadingChapter() {
+    if (isPresenting()) return;
+    const baseline = document.querySelector('.mast').offsetHeight + 85;
+    let index = 0;
+    for (let i = 0; i < chapters.length; i++) {
+      if (chapters[i].getBoundingClientRect().top > baseline) break;
+      index = i;
+    }
+    if (Math.abs(innerHeight + scrollY - document.documentElement.scrollHeight) < 4) index = chapters.length - 1;
+    update(index);
+  }
+  document.documentElement.classList.add('js');
+  chapters.forEach(chapter => chapter.querySelector('h2').setAttribute('tabindex', '-1'));
+  tocButton.setAttribute('aria-expanded', 'false');
+  mode.setAttribute('aria-pressed', 'false');
+  tocButton.addEventListener('click', event => {
+    event.preventDefault();
+    if (body.classList.contains('toc-open')) { closeToc(true); return; }
+    body.classList.add('toc-open');
+    tocButton.setAttribute('aria-expanded', 'true');
+    navLinks[current].focus();
+  });
+  byId('close-toc').addEventListener('click', () => closeToc(true));
+  document.addEventListener('click', event => {
+    if (body.classList.contains('toc-open') && !event.target.closest('#toc,#toc-toggle')) closeToc(false);
+  });
+  navLinks.forEach((link, index) => link.addEventListener('click', event => {
+    event.preventDefault();
+    moveTo(index, true);
+  }));
+  document.querySelector('.brand').addEventListener('click', () => {
+    if (isPresenting()) setMode(false);
+  });
+  mode.addEventListener('click', () => setMode(!isPresenting()));
+  notesButton.addEventListener('click', () => {
+    if (isPresenting()) presentingNotes = !presentingNotes;
+    else readingNotes = !readingNotes;
+    syncNotes();
+    if (!isPresenting()) chapters[current].scrollIntoView({block: 'start'});
+  });
+  byId('prev').addEventListener('click', () => moveTo(current - 1, true));
+  byId('next').addEventListener('click', () => moveTo(current + 1, true));
+  byId('print').addEventListener('click', () => window.print());
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && body.classList.contains('toc-open')) { closeToc(true); return; }
+    if (!isPresenting() || body.classList.contains('toc-open') || event.altKey || event.ctrlKey || event.metaKey) return;
+    if (event.key === 'Escape') { setMode(false); return; }
+    if (event.target.closest('input,textarea,select,[contenteditable],pre')) return;
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      event.preventDefault();
+      moveTo(current + (event.key === 'ArrowRight' ? 1 : -1), true);
+    }
+  });
+  window.addEventListener('hashchange', () => {
+    const index = chapters.findIndex(chapter => '#' + chapter.id === location.hash);
+    if (index >= 0) moveTo(index, false);
+  });
+  window.addEventListener('scroll', () => {
+    if (isPresenting() || pendingScroll) return;
+    pendingScroll = true;
+    requestAnimationFrame(() => { pendingScroll = false; findReadingChapter(); });
+  }, {passive: true});
+  let folded = [];
+  window.addEventListener('beforeprint', () => {
+    folded = Array.from(document.querySelectorAll('details:not([open])'));
+    folded.forEach(item => { item.open = true; });
+  });
+  window.addEventListener('afterprint', () => {
+    folded.forEach(item => { item.open = false; });
+    folded = [];
+  });
+  findReadingChapter();
+  syncNotes();
+})();
+</script>
+</body>
+</html>
